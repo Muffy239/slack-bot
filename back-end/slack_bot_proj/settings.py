@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'events_app',
     'rest_framework',
+    'slack_sdk',
 ]
 
 MIDDLEWARE = [
