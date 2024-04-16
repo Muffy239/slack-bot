@@ -17,7 +17,7 @@ env = dotenv_values(".env")
 
 
 #! Description:
-# * T
+# *
 
 
 #! Voting Functionality:
