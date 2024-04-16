@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'events_app',
+    'command_app',
     'rest_framework',
     'slack_sdk',
 ]
