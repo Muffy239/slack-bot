@@ -22,5 +22,4 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("slack/event/", include("events_app.urls")),
     path("slack/slash_command/", include("command_app.urls")),
-    path("slack/chatbot/", include("openAI_app.urls")),
 ]

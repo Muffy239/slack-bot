@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "events_app",
     "command_app",
-    "openAI_app",
     "rest_framework",
     "slack_sdk",
 ]
