@@ -12,13 +12,16 @@ from slack_sdk.signature import SignatureVerifier
 from slack_sdk import WebClient
 from dotenv import dotenv_values
 from slack_sdk.errors import SlackApiError
+from openai import OpenAI
 
 #! Description:
-# * This will handle a message inside the server and return the same message back to the user
+# * This will handle all events inside the organizations slack channel and respond accordingly.
 
-#! Reason:
-# * I needed to check the functionality and get an understanding of the payload.
+# *      - Greet Users
+# *      - Respond to user questions with ChatGPT from @bot mentions
 
+
+# TODO CHANGE message in text argument
 
 env = dotenv_values(".env")
 
@@ -31,6 +34,7 @@ class Greeting(APIView):
         slack_token = env.get("SLACK_TOKEN")
         client = WebClient(token=slack_token)
         bot_id = client.api_call("auth.test")["user_id"]
+        ai_client = OpenAI(api_key=env.get("OPENAI_API_KEY"))
 
         # Parse the request payload
         payload = request.data
@@ -42,22 +46,54 @@ class Greeting(APIView):
         user_id = event.get("user")
         user_message = event.get("text")
 
-        # * Returns challenge token back to slack when connecting events functionality to the bot(required).
+        #  Returns challenge token back to slack when connecting events functionality to the bot(required).
         if "challenge" in payload:
             return Response(payload["challenge"], status=HTTP_200_OK)
 
+        # verifying data being sent to us for development.
         console_print = print(f"EVENT INFO: {request.data}\n\n~~~~~~~~~~~~~~~~~~~\n\n")
 
-        # * FUNCTION: Greet Users.
+        # * Event: User Joins #general Channel upon entry to organization.
         if event_type == "member_joined_channel":
-            welcome_message = f"Hello, <@{user_id}>!, 🎉 I hope you enjoy your time here. Feel free to ask any questions to "
-            client.chat_postMessage(channel=channel_id, text=welcome_message)
-            return console_print, Response(status=HTTP_201_CREATED)
+            try:
+                welcome_message = f"Hello, <@{user_id}>!, 🎉 I hope you enjoy your time here. Feel free to ask any questions to "
+                client.chat_postMessage(channel=channel_id, text=welcome_message)
+                return console_print, Response(status=HTTP_201_CREATED)
+            except SlackApiError as e:
+                print(f"Slack API Error: {e.response['error']}")
+                return Response(status=HTTP_400_BAD_REQUEST)
 
-        # * FUNCTION: Reply to users.
-        if user_id != str(bot_id):
-            # TODO CHANGE message in text argument
-            client.chat_postMessage(channel=channel_id, text=user_message)
-            return Response(status=HTTP_201_CREATED)
+        #! CHATGPT
+        # * Event: listens to direct DM's from users.abs
+
+        if event_type == "message" and user_id != bot_id:
+            if f"<@{bot_id}>" in user_message:
+                try:
+                    completion = ai_client.chat.completions.create(
+                        model="gpt-3.5-turbo",
+                        messages=[
+                            {
+                                "role": "assistant",
+                                "content": "You are a helpful assistant. ",
+                            },
+                            {
+                                "role": "user",
+                                "content": user_message,  # Use the actual user message from Slack
+                            },
+                        ],
+                    )
+
+                    response_text = completion.choices[0].message.content
+
+                    print(f"CHATGPT: \n\n{response_text}\n\n")
+
+                    client.chat_postMessage(channel=channel_id, text=response_text)
+
+                    return Response(status=HTTP_201_CREATED)
+                except (
+                    Exception
+                ) as e:  # It's a good practice to handle potential exceptions
+                    print(f"Error: {str(e)}")
+                    return Response(status=HTTP_400_BAD_REQUEST)
 
         return Response(status=HTTP_200_OK)

@@ -17,15 +17,12 @@ env = dotenv_values(".env")
 
 
 #! Description:
-# *
+# * Create functionality for creating a poll message for the channel
 
 
 #! Voting Functionality:
 
 # * Yes or No (ONLY)
-
-
-# TODO: Account for users only being able to vote once. take in first users vote only.
 
 
 class Poll(APIView):
