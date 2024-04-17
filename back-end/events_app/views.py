@@ -13,6 +13,8 @@ from slack_sdk import WebClient
 from dotenv import dotenv_values
 from slack_sdk.errors import SlackApiError
 from openai import OpenAI
+from .models import Members
+from .serializers import MemberSerializer
 
 #! Description:
 # * This will handle all events inside the organizations slack channel and respond accordingly.
@@ -51,16 +53,31 @@ class Greeting(APIView):
             return Response(payload["challenge"], status=HTTP_200_OK)
 
         # verifying data being sent to us for development.
-        console_print = print(f"EVENT INFO: {request.data}\n\n~~~~~~~~~~~~~~~~~~~\n\n")
+        console_print = print(
+            f"EVENT INFO: {request.data['event']}\n\n~~~~~~~~~~~~~~~~~~~\n\n"
+        )
 
         # * Event: User Joins #general Channel upon entry to organization.
         if event_type == "member_joined_channel":
             try:
-                welcome_message = f"Hello, <@{user_id}>!, 🎉 I hope you enjoy your time here. Feel free to ask any questions to "
+                # When users join the #general channel we grab details from Slack API.
+                user_info = client.users_info(user=user_id)
+                user = user_info["user"]
+
+                # Save Details to database:
+                Members.objects.update_or_create(
+                    user_id=user_id, default={"username": user["name"]}
+                )
+
+                # Generate Message for users:
+                welcome_message = f"Hello, <@{user_id}>!, 🎉 I hope you enjoy your time here. Feel free to ask any questions to  <@Adrian>.\n<Greet user with channel info> :)"
+                # send message out to slack channel.
                 client.chat_postMessage(channel=channel_id, text=welcome_message)
+
                 return console_print, Response(status=HTTP_201_CREATED)
             except SlackApiError as e:
                 print(f"Slack API Error: {e.response['error']}")
+
                 return Response(status=HTTP_400_BAD_REQUEST)
 
         #! CHATGPT
@@ -85,7 +102,7 @@ class Greeting(APIView):
 
                     response_text = completion.choices[0].message.content
 
-                    print(f"CHATGPT: \n\n{response_text}\n\n")
+                    print(f"CHATGPT Response: \n\n{response_text}\n\n")
 
                     client.chat_postMessage(channel=channel_id, text=response_text)
 
