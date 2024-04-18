@@ -37,30 +37,33 @@ class Poll(APIView):
         user_id = payload.get("user_id")
         user_message = payload.get("text")
 
-        try:
+        if payload["command"] == "/poll":
+            try:
 
-            # * Format message for chat and add reactions for users to respond to.
-            message = f"Creator: <@{user_id}>\n\n Poll: {user_message}\n"
-            response = client.chat_postMessage(channel=channel_id, text=message)
+                # * Format message for chat and add reactions for users to respond to:
+                message = f"Creator: <@{user_id}>\n\n Poll: {user_message}\n"
+                response = client.chat_postMessage(channel=channel_id, text=message)
 
-            # * add reactions to message for users to vote. (below)
-            timestamp = response.get("ts")
-            client.reactions_add(
-                channel=channel_id,
-                name="thumbsup",
-                timestamp=timestamp,
-            )
+                # * add reactions to message for users to vote:
+                # * Reaction 1:
+                timestamp = response.get("ts")
+                client.reactions_add(
+                    channel=channel_id,
+                    name="thumbsup",
+                    timestamp=timestamp,
+                )
+                # * Reaction 2:
+                client.reactions_add(
+                    channel=channel_id,
+                    name="thumbsdown",
+                    timestamp=timestamp,
+                )
 
-            client.reactions_add(
-                channel=channel_id,
-                name="thumbsdown",
-                timestamp=timestamp,
-            )
+                # * Poll Request info
+                print(f"PAYLOAD INFO: \n\n\n\n\n{payload}\n\n\n\n\n")
 
-            return Response(status=HTTP_201_CREATED)
+                return Response(status=HTTP_201_CREATED)
+            except SlackApiError as e:
+                print(f"Slack API Error: {e.response['error']}")
 
-        except SlackApiError as e:
-
-            print(f"Slack API Error: {e.response['error']}")
-
-            return Response(status=HTTP_400_BAD_REQUEST)
+                return Response(status=HTTP_400_BAD_REQUEST)

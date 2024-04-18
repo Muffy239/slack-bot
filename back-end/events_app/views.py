@@ -65,9 +65,7 @@ class Greeting(APIView):
                 user = user_info["user"]
 
                 # Save Details to database:
-                Members.objects.update_or_create(
-                    user_id=user_id, default={"username": user["name"]}
-                )
+                Members.objects.update_or_create(user_id=user_id, username=user["name"])
 
                 # Generate Message for users:
                 welcome_message = f"Hello, <@{user_id}>!, 🎉 I hope you enjoy your time here. Feel free to ask any questions to  <@Adrian>.\n<Greet user with channel info> :)"
@@ -91,7 +89,7 @@ class Greeting(APIView):
                         messages=[
                             {
                                 "role": "assistant",
-                                "content": "You are a helpful assistant. ",
+                                "content": "Be yourself. ",
                             },
                             {
                                 "role": "user",
@@ -114,3 +112,12 @@ class Greeting(APIView):
                     return Response(status=HTTP_400_BAD_REQUEST)
 
         return Response(status=HTTP_200_OK)
+
+
+    #* Return all members 
+    def get(self, request):
+        members = Members.objects.all()
+
+        MemberSerializer(members, many=True)
+
+        return Response(Serializer.data, status=HTTP_200_OK)
