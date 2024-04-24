@@ -1,9 +1,11 @@
-export default function Nav() {
+const About = () => {
     return (
         <>
             <div>
-                <h1>Nav</h1>
+                <h3>About</h3>
             </div>
         </>
     );
-}
+};
+
+export default About;
