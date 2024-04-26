@@ -1,7 +1,7 @@
 const Signup = () => {
     return (
         <>
-            <div>
+            <div id="Container" className="w-full h-screen">
                 <h3>Signup Page</h3>
             </div>
         </>
