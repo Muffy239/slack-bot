@@ -1,27 +1,41 @@
 import "./App.css";
-import { Outlet } from "react-router-dom";
-import * as React from "react";
-import NavBar from "./components/NavBar";
 import "bootstrap/dist/css/bootstrap.min.css";
-
-// import { useEffect } from "react";
-// import axios from "axios";
+import { useEffect, useState } from "react";
+import NavBar from "./components/NavBar";
+import { Outlet, useLoaderData, useNavigate, useLocation } from "react-router-dom";
 
 function App() {
-    //* TESTING
-    // const testConnection = async () => {
-    //     let response = await axios.get("http://127.0.0.1:8000/api/test/");
-    //     console.log(response);
-    // };
+    const [user, setUser] = useState(useLoaderData());
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    // useEffect(() => {
-    //     testConnection();
-    // }, []);
+    useEffect(() => {
+        let nullUserUrls = ["/login", "/signup"]; // should redirect to homepage if logged in
+
+        // check if current url is one that might need to redirect
+        let isAllowed = nullUserUrls.includes(location.pathname);
+        console.log("isallowed ", isAllowed);
+
+        // redirect to homepage when
+        // logged user tries to go to signup, etc
+        if (user && isAllowed) {
+            console.log("redirect to homepage");
+            navigate("/");
+        }
+
+        // not logged in user tries to go anywhere BUT signup or login
+        // we redirect because the user needs to log in before they do anything else
+        else if (!user && !isAllowed) {
+            navigate("/");
+        }
+
+        console.log("user updated", user);
+    }, [user, location.pathname]);
 
     return (
         <>
-            <NavBar />
-            <Outlet />
+            <NavBar user={user} setUser={setUser} />
+            <Outlet context={{ user, setUser }} />
         </>
     );
 }

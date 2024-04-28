@@ -5,11 +5,13 @@ import NotFound from "./pages/NotFound";
 import Home from "./pages/Home";
 import Signup from "./pages/Signup";
 import About from "./pages/About";
+import { userConfirmation } from "../utilities";
 
 const router = createBrowserRouter([
     {
         path: "/",
         element: <App />,
+        loader: userConfirmation,
         children: [
             {
                 index: true,
